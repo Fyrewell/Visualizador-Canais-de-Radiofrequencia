@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Trabalho de Redes e Sistemas de Comunicações Móveis</title>
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #map {
+        height: 100%;
+      }
+	#floating-panel {
+	  position: absolute;
+	  top: 10px;
+	  left: 25%;
+	  z-index: 5;
+	  background-color: #fff;
+	  padding: 5px;
+	  border: 1px solid #999;
+	  text-align: center;
+	  font-family: 'Roboto','sans-serif';
+	  line-height: 30px;
+	  padding-left: 10px;
+	}
+
+      #floating-panel {
+        background-color: #fff;
+        border: 1px solid #999;
+        left: 50%;
+		margin-left:-30%;
+        padding: 5px;
+        position: absolute;
+        top: 10px;
+        z-index: 5;
+		width:50%;height:120px;
+		padding:10px;
+      }
+		.inp-style {width:120px;floar:left;}
+		.lbl-input {width:180px;text-align:right;display:inline-block;padding-right:4px}
+    </style>
+  </head>
+
+  <body>
+    <div id="floating-panel">
+	
+		<div style="float:left">
+			<label for="potencia"> <span class="lbl-input">Frequência (MHz):</span>
+				<input type="text" name="frequencia" class="inp-style">
+			</label>
+
+			<label for="potencia"><span class="lbl-input">Potência do sinal (dB):</span>
+				<input type="text" name="potencia" class="inp-style">
+			</label>
+			<br/>
+
+			<label for="potencia"><span class="lbl-input">Altura da BS (m):</span>
+				<input type="text" name="potencia" class="inp-style">
+			</label>
+
+			<label for="potencia"><span class="lbl-input">Altura da MS (m):</span>
+				<input type="text" name="potencia" class="inp-style">
+			</label>
+				<br/>
+			<div style="margin-top:20px">
+				<button onclick="calcularCfeModeloMarcado()">Calcular</button>
+				<button onclick="alert('clicouvoltar')">Voltar</button>
+				<button onclick="alert('clicouvoltar')">Limpar</button>		
+			</div>
+		</div>
+
+		<div style="float:left;text-align:left;margin-left:20px;">
+			<span style="padding-left:4px">Modelo:</span><br/>
+			<input id="model1" type="radio" name="modelo" value="okumuraHata"><b style="cursor:pointer" onclick="document.getElementById('model1').click()">okumuraHata</b><br/>
+			<input id="model2" type="radio" name="modelo" value="cost231Hata"><b style="cursor:pointer" onclick="document.getElementById('model2').click()">cost231Hata</b><br/>
+			<input id="model3" type="radio" name="modelo" value="SUI"><b style="cursor:pointer" onclick="document.getElementById('model3').click()">SUI</b><br/>
+		</div>
+
+    </div>
+    <div id="map"></div>
+    <script>
+
+var map, heatmap;
+var arrPoints = [];
+
+function iniciarMapa() {
+  map = new google.maps.Map(document.getElementById('map'), {
+    zoom: 16,
+    center: {lat: -29.697666, lng: -52.438677},
+    mapTypeId: google.maps.MapTypeId.SATELLITE
+  });
+
+	heatmap = new google.maps.visualization.HeatmapLayer({
+		map: map
+	});
+
+	google.maps.event.addListener(map, 'click', function(event) {
+		//height modifica após calculo
+		arrPoints.push({location: event.latLng, weight: 1, radius:10})
+		heatmap.setData(arrPoints);	
+	});
+}
+
+function calcular() {
+	
+}
+
+    </script>
+	<script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAmF9KKgyVM0NPPh8nKnCjbgP_KbtdEV8E&libraries=visualization&callback=iniciarMapa">
+    </script>
+  </body>
+</html>
