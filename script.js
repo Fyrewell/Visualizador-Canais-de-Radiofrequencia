@@ -45,10 +45,10 @@ function calcularCfeModeloMarcado () {
       PLval = okumuraHata(frequencia, alturaBS, alturaMS, zonaInt(zona), raio)
     break
     case 'cost231Hata':
-      PLval = cost231Hata()
+      PLval = cost231Hata(frequencia, alturaBS, alturaMS, zonaInt(zona), raio)
     break
     case 'SUI':
-      PLval = SUI()
+      PLval = SUI(frequencia, alturaBS, alturaMS, zonaInt(zona), raio)
     break
   }
   
@@ -71,6 +71,12 @@ function zonaInt(zonaStr) {
   return 1;
 }
 
+/* range of parameters
+  frequency : 150–1500 MHz
+  hb : 1–10 m
+  hm : 30–200 m
+  radius : lkm-10 km
+*/
 function okumuraHata(frequency, hb, hm, place, radius){
   // fator para cidades pequenas e medias, para grandes varia formula conforme frequencia...
   var a = function(hm, fc) {
@@ -89,14 +95,41 @@ function okumuraHata(frequency, hb, hm, place, radius){
   return PL;
 }
 
-function cost231Hata(position, frequency, hb, hm, place, radius){
-	
-	
-return;
+/* range of parameters
+  frequency : 1500–2000 MHz
+  hb : lm to lOm
+  hm : 3Om to 200m
+  radius : lkm to 20 km
+*/
+function cost231Hata(frequency, hb, hm, place, radius){
+
+  var a = function(hm, fc) {
+    return (0.8 + ((1.1 * Math.log10(fc) - 0.7) * hm) - (1.56 * Math.log10(fc)))
+  }
+  var C = function(pv) {
+    if (pv==1) return 3;
+    return 0;
+  }
+  L = 46.3-33.9*Math.log10(frequency)-13.82*Math.log10(hb)-a(hm,frequency)+(44.9-6.55*Math.log10(hb))*Math.log10(radius)+C(place)
+
+  return L;
 }
 
-function SUI(y1, y2, y3, y4, y5, y){
-	
-	
-return;
+/* range of parameters
+  frequency : <=2000 MHz
+  hb : l0m to 80m
+  radius : lkm to 10 km
+*/
+function SUI(frequency, hb, hm, place, radius){
+  var d0 = 100
+  var Xrho = 6
+  var Y = function(i,hb) {
+    var a = [0, 4.6, 4, 3.6]
+    var b = [0, 0.0075, 0.0065, 0.005]
+    var c = [0, 12.6, 17.1, 20]
+    return a[i]-(b[i]*hb)+(c[i]/hb)
+  }
+  var PL = 20*Math.log10(4*Math.PI*d0*frequency/300) + 10*Y(place,hb)*Math.log10(radius/d0) + Xrho;
+
+  return PL;
 }

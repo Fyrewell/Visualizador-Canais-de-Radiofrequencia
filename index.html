@@ -11,7 +11,7 @@
 	
 		<div style="float:left">
 			<label for="frequencia"> <span class="lbl-input">Frequência (MHz):</span>
-				<input id="frequencia" type="text" name="frequencia" class="inp-style" value="1000">
+				<input id="frequencia" type="text" name="frequencia" class="inp-style" value="1500">
 			</label>
 
 			<label for="alturaBS"><span class="lbl-input">Altura da BS (m):</span>
@@ -20,7 +20,8 @@
       <br/>
       
       <label for="raio"><span class="lbl-input">Raio (km):</span>
-        <input id="raio" type="range" name="raio" min="0" max="10">
+        <input id="raio" type="range" name="raio" min="0" max="20" onchange="document.getElementById('bindRaio').innerHTML = this.value">
+        <div id="bindRaio" style="display:inline-block"></div>
       </label>
       
       <label for="alturaMS"><span class="lbl-input">Altura da MS (m):</span>
@@ -54,10 +55,15 @@
 
     </div>
     <div id="map"></div>
-
     <script async defer
           src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAmF9KKgyVM0NPPh8nKnCjbgP_KbtdEV8E&libraries=visualization&callback=iniciarMapa">
     </script>
     <script type="text/javascript" src="script.js"></script>
+    <script type="text/javascript">
+      window.onload = function() {
+        document.getElementById('bindRaio').innerHTML = document.getElementById('raio').value
+      }
+    </script>
   </body>
+
 </html>
