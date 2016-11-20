@@ -15,8 +15,8 @@ function iniciarMapa() {
       placeEstacaoMovel(map, event.latLng);
     } else {
       placeMarker(map, event.latLng);
+      calcularCfeModeloMarcado();
     }
-    calcularCfeModeloMarcado();
   });
 }
 
@@ -41,6 +41,7 @@ function placeMarker(map, location) {
         placeEstacaoMovel(map, event.latLng);
       } else {
         placeMarker(map, event.latLng);
+        calcularCfeModeloMarcado();
       }
     });
     arrAntenas.push(marker);
