@@ -52,7 +52,7 @@ function placeEstacaoMovel(map, location) {
 
   var marker = new google.maps.Marker({
     position: location,
-    icon: 'cell-icon-91.png',
+    icon: 'cell-icon.png',
     map: map
   });
   arrEstacoesMoveis.push(marker);
