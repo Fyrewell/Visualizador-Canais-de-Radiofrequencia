@@ -15,36 +15,38 @@ function iniciarMapa() {
       placeEstacaoMovel(map, event.latLng);
     } else {
       placeMarker(map, event.latLng);
-      calcularCfeModeloMarcado();
     }
+    calcularCfeModeloMarcado();
   });
 }
 
 function placeMarker(map, location) {
-  var colors = ['#FF0000','#FFFF00','#008000'];
-  var radii = [50,25,5];
+	
+	var colors = ['#FF0000','#FF6347','#FF7F50',// Vermelho
+	'#CD853F','#D2691E','#F4A460','#FFDEAD', // Amarelo
+	'#ADFF2F','#7CFC00','#32CD32','#006400'];//Verde 
+	var dBtotal =  calcularCfeModeloMarcado();
+	var db = [78, 83, 88, 93, 98, 103, 108, 113, 188, 123, 128];
+	var raio = document.querySelector('#raio').value;
+	for (i = 0; i < 11; i++) {
+		var marker = new google.maps.Circle({
+			strokeOpacity: 0,
+			fillColor:colors[i],
+			fillOpacity: 0.5,
+			map: map,
+			center: location,
+			position: location,
+			radius: 
+		});
 
-  for (i = 0; i < 3; i++) {
-
-    var marker = new google.maps.Circle({
-      strokeOpacity: 0,
-      fillColor:colors[i],
-      fillOpacity: 0.35,
-      map: map,
-      center: location,
-      position: location,
-      radius:radii[i]
-    });
-
-    marker.addListener('click', function(event){
-      if (document.querySelector('input[name=optPlace]:checked').value=='mobile'){
-        placeEstacaoMovel(map, event.latLng);
-      } else {
-        placeMarker(map, event.latLng);
-        calcularCfeModeloMarcado();
-      }
-    });
-    arrAntenas.push(marker);
+		marker.addListener('click', function(event){
+			if (document.querySelector('input[name=optPlace]:checked').value=='mobile'){
+				placeEstacaoMovel(map, event.latLng);
+			} else {
+				placeMarker(map, event.latLng);
+			}
+		});
+		arrAntenas.push(marker);
 
   }
 }
@@ -122,8 +124,13 @@ function calcularCfeModeloMarcado () {
     break
   }
   
+   if(PLval < 0){
+	 PLval = PLval*(-1);
+  }
+  
   document.querySelector('#divForBindPathLoss').innerHTML = PLval.toFixed(8)
   
+  return PLval;
 }
 
 function zonaInt(zonaStr) {
