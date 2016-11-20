@@ -146,11 +146,12 @@ function zonaInt(zonaStr) {
   hb : 1–10 m
   hm : 30–200 m
   radius : lkm-10 km
+  http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.303.4057&rep=rep1&type=pdf
 */
 function okumuraHata(frequency, hb, hm, place, radius){
   // fator para cidades pequenas e medias, para grandes varia formula conforme frequencia...
   var a = function(hm, fc) {
-    return (0.8 + ((1.1 * Math.log10(fc) - 0.7) * hm) - (1.56 * Math.log10(fc)))
+    return ((1.1*Math.log10(fc-0.7))*hm-(1.56*Math.log10(fc)-0.8))
   }
 
   var PL = 69.55+26.16*(Math.log10(frequency))-13.82*Math.log10(hb)-a(hm,frequency)+(44.9 - 6.55 * Math.log10(hb))*Math.log10(radius)
@@ -170,17 +171,19 @@ function okumuraHata(frequency, hb, hm, place, radius){
   hb : lm to lOm
   hm : 3Om to 200m
   radius : lkm to 20 km
+  http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.303.4057&rep=rep1&type=pdf
 */
 function cost231Hata(frequency, hb, hm, place, radius){
 
   var a = function(hm, fc) {
-    return (0.8 + ((1.1 * Math.log10(fc) - 0.7) * hm) - (1.56 * Math.log10(fc)))
+    return ((1.1*Math.log10(fc-0.7))*hm-(1.56*Math.log10(fc)-0.8))
   }
+
   var C = function(pv) {
     if (pv==1) return 3;
     return 0;
   }
-  L = 46.3-33.9*Math.log10(frequency)-13.82*Math.log10(hb)-a(hm,frequency)+(44.9-6.55*Math.log10(hb))*Math.log10(radius)+C(place)
+  L = 46.3+33.9*Math.log10(frequency)-13.82*Math.log10(hb)-a(hm,frequency)+(44.9-6.55*Math.log10(hb))*Math.log10(radius)+C(place)
 
   return L;
 }
