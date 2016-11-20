@@ -1,5 +1,8 @@
 
 
+var arrAntenas = []
+var arrEstacoesMoveis = []
+
 function iniciarMapa() {
 	
   var getmap = document.getElementById("map");
@@ -8,28 +11,94 @@ function iniciarMapa() {
   var map = new google.maps.Map(getmap, mapOptions);
  
   google.maps.event.addListener(map, 'click', function(event) {
-    placeMarker(map, event.latLng);
+    if (document.querySelector('input[name=optPlace]:checked').value=='mobile'){
+      placeEstacaoMovel(map, event.latLng);
+    } else {
+      placeMarker(map, event.latLng);
+    }
     calcularCfeModeloMarcado();
   });
 }
 
 function placeMarker(map, location) {
-	console.log(location.lat(),location.lng())
-	var colors = ['#FF0000','#FFFF00','#008000'];
-	var radii = [50,25,5];
-	
-	 for (i = 0; i < 3; i++) {
-		 
-		  var marker = new google.maps.Circle({
-			  strokeOpacity: 0,
-			  fillColor:colors[i],
-			  fillOpacity: 0.35,
-			  map: map,
-			  center: location,
-			  radius:radii[i]
-		  });
-	 }
- 
+  var colors = ['#FF0000','#FFFF00','#008000'];
+  var radii = [50,25,5];
+
+  for (i = 0; i < 3; i++) {
+
+    var marker = new google.maps.Circle({
+      strokeOpacity: 0,
+      fillColor:colors[i],
+      fillOpacity: 0.35,
+      map: map,
+      center: location,
+      position: location,
+      radius:radii[i]
+    });
+
+    marker.addListener('click', function(event){
+      if (document.querySelector('input[name=optPlace]:checked').value=='mobile'){
+        placeEstacaoMovel(map, event.latLng);
+      } else {
+        placeMarker(map, event.latLng);
+      }
+    });
+    arrAntenas.push(marker);
+
+  }
+}
+
+function placeEstacaoMovel(map, location) {
+
+  var marker = new google.maps.Marker({
+    position: location,
+    icon: 'cell-icon-91.png',
+    map: map
+  });
+  arrEstacoesMoveis.push(marker);
+
+  // Procurar onde se conectar
+  var menor = Infinity;
+  var antenaPerto = {}
+  arrAntenas.forEach(function(el, ind, arr){
+    console.log(marker.position.lat(), marker.position.lng(), el.position.lat(), el.position.lng())
+    var menor_t = haversineDistance(marker.position.lat(), marker.position.lng(), el.position.lat(), el.position.lng())
+    if (menor_t < menor){
+      menor = menor_t
+      antenaPerto = el
+    }
+  });
+
+  var line = new google.maps.Polyline({
+    path: [
+        new google.maps.LatLng(marker.position.lat(), marker.position.lng()), 
+        new google.maps.LatLng(antenaPerto.position.lat(), antenaPerto.position.lng())
+    ],
+    strokeColor: "#000",
+    strokeOpacity: 1.0,
+    strokeWeight: 8,
+    map: map
+  });
+
+}
+
+function haversineDistance(latitudeFrom, longitudeFrom, latitudeTo, longitudeTo, earthRadius = 6371000) {
+
+    latFrom = deg2rad(latitudeFrom);
+    lonFrom = deg2rad(longitudeFrom);
+    latTo = deg2rad(latitudeTo);
+    lonTo = deg2rad(longitudeTo);
+
+    latDelta = latTo - latFrom;
+    lonDelta = lonTo - lonFrom;
+
+    angle = 2 * Math.asin(Math.sqrt(Math.pow(Math.sin(latDelta / 2), 2) +
+      Math.cos(latFrom) * Math.cos(latTo) * Math.pow(Math.sin(lonDelta / 2), 2)));
+    return angle * earthRadius;
+}
+
+function deg2rad(angle) {
+  return angle * 0.017453292519943295
 }
 
 function calcularCfeModeloMarcado () {
