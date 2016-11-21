@@ -25,9 +25,9 @@ function placeMarker(map, location) {
 	var colors = ['#FF0000','#FF6347','#FF7F50',// Vermelho
 	'#CD853F','#D2691E','#F4A460','#FFDEAD', // Amarelo
 	'#ADFF2F','#7CFC00','#32CD32','#006400'];//Verde 
-	var dBtotal =  calcularCfeModeloMarcado();
-	var db = [78, 83, 88, 93, 98, 103, 108, 113, 188, 123, 128];
 	var raio = document.querySelector('#raio').value;
+  console.log(raio)
+  var mult = raio/11;
 	for (i = 0; i < 11; i++) {
 		var marker = new google.maps.Circle({
 			strokeOpacity: 0,
@@ -36,9 +36,9 @@ function placeMarker(map, location) {
 			map: map,
 			center: location,
 			position: location,
-			radius: 
+			radius: raio*1000
 		});
-
+    raio-=mult;
 		marker.addListener('click', function(event){
 			if (document.querySelector('input[name=optPlace]:checked').value=='mobile'){
 				placeEstacaoMovel(map, event.latLng);
@@ -123,11 +123,7 @@ function calcularCfeModeloMarcado () {
       PLval = SUI(frequencia, alturaBS, alturaMS, zonaInt(zona), raio)
     break
   }
-  
-   if(PLval < 0){
-	 PLval = PLval*(-1);
-  }
-  
+
   document.querySelector('#divForBindPathLoss').innerHTML = PLval.toFixed(8)
   
   return PLval;
