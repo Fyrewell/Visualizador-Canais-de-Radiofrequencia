@@ -28,6 +28,7 @@ function placeMarker(map, location) {
 	var raio = document.querySelector('#raio').value;
   console.log(raio)
   var mult = raio/11;
+  var valores_limiares = "";
 	for (i = 0; i < 11; i++) {
 		var marker = new google.maps.Circle({
 			strokeOpacity: 0,
@@ -39,6 +40,8 @@ function placeMarker(map, location) {
 			radius: raio*1000
 		});
     raio-=mult;
+    if (raio<=0.01) raio=0.1;
+    valores_limiares += calcularCfeModeloMarcado(raio) + " ";
 		marker.addListener('click', function(event){
 			if (document.querySelector('input[name=optPlace]:checked').value=='mobile'){
 				placeEstacaoMovel(map, event.latLng);
@@ -49,6 +52,7 @@ function placeMarker(map, location) {
 		arrAntenas.push(marker);
 
   }
+  alert(valores_limiares);
 }
 
 function placeEstacaoMovel(map, location) {
@@ -104,13 +108,12 @@ function deg2rad(angle) {
   return angle * 0.017453292519943295
 }
 
-function calcularCfeModeloMarcado () {
+function calcularCfeModeloMarcado (raio) {
   
   var frequencia = document.querySelector('#frequencia').value
   var alturaBS = document.querySelector('#alturaBS').value
   var alturaMS = document.querySelector('#alturaMS').value
   var zona = document.querySelector('input[name=zona]:checked').value
-  var raio = document.querySelector('#raio').value
   var PLval = 0;
   switch (document.querySelector('input[name=modelo]:checked').value){
     case 'okumuraHata':
