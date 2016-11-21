@@ -1,13 +1,26 @@
 
+function TxtOverlay(pos, txt, cls, map) {
+
+  this.pos = pos;
+  this.txt_ = txt;
+  this.cls_ = cls;
+  this.map_ = map;
+
+  this.div_ = null;
+
+  this.setMap(map);
+}
+
+
 
 var arrAntenas = []
 var arrEstacoesMoveis = []
 
 function iniciarMapa() {
-	
+
   var getmap = document.getElementById("map");
   var setcenter = new google.maps.LatLng(-29.697833,-52.437242);
-  var mapOptions = {center: setcenter, zoom: 18};
+  var mapOptions = {center: setcenter, zoom: 14};
   var map = new google.maps.Map(getmap, mapOptions);
  
   google.maps.event.addListener(map, 'click', function(event) {
@@ -17,7 +30,77 @@ function iniciarMapa() {
       placeMarker(map, event.latLng);
     }
     calcularCfeModeloMarcado();
+    
+    var frequencia = document.querySelector('#frequencia').value
+    var alturaBS = document.querySelector('#alturaBS').value
+    var alturaMS = document.querySelector('#alturaMS').value
+    var zona = document.querySelector('input[name=zona]:checked').value
+    var modelo = document.querySelector('input[name=modelo]:checked').value
+    new TxtOverlay(event.latLng,
+    "<div>Modelo: "+modelo+"<br/>\
+    Frequencia: "+frequencia+"<br/>\
+    Altura da BS: "+alturaBS+"<br/>\
+    Altura da MS: "+alturaMS+"<br/>\
+    Zona: "+zona+"<br/>\
+    </div>", 
+    "customBox2", map)
+    
   });
+  
+
+
+  TxtOverlay.prototype = new google.maps.OverlayView();
+
+  TxtOverlay.prototype.onAdd = function() {
+    var div = document.createElement('DIV');
+    div.className = this.cls_;
+    div.innerHTML = this.txt_;
+    this.div_ = div;
+    var overlayProjection = this.getProjection();
+    var position = overlayProjection.fromLatLngToDivPixel(this.pos);
+    div.style.left = position.x + 'px';
+    div.style.top = position.y + 'px';
+    var panes = this.getPanes();
+    panes.floatPane.appendChild(div);
+  }
+  TxtOverlay.prototype.draw = function() {
+    var overlayProjection = this.getProjection();
+    var position = overlayProjection.fromLatLngToDivPixel(this.pos);
+    var div = this.div_;
+    div.style.left = position.x + 'px';
+    div.style.top = position.y + 'px';
+  }
+  TxtOverlay.prototype.onRemove = function() {
+    this.div_.parentNode.removeChild(this.div_);
+    this.div_ = null;
+  }
+  TxtOverlay.prototype.hide = function() {
+    if (this.div_) {
+      this.div_.style.visibility = "hidden";
+    }
+  }
+  TxtOverlay.prototype.show = function() {
+    if (this.div_) {
+      this.div_.style.visibility = "visible";
+    }
+  }
+  TxtOverlay.prototype.toggle = function() {
+    if (this.div_) {
+      if (this.div_.style.visibility == "hidden") {
+        this.show();
+      } else {
+        this.hide();
+      }
+    }
+  }
+  TxtOverlay.prototype.toggleDOM = function() {
+    if (this.getMap()) {
+      this.setMap(null);
+    } else {
+      this.setMap(this.map_);
+    }
+  }
+
 }
 
 function placeMarker(map, location) {
@@ -28,20 +111,17 @@ function placeMarker(map, location) {
 	var raio = document.querySelector('#raio').value;
   console.log(raio)
   var mult = raio/11;
-  var valores_limiares = "";
 	for (i = 0; i < 11; i++) {
 		var marker = new google.maps.Circle({
 			strokeOpacity: 0,
 			fillColor:colors[i],
-			fillOpacity: 0.5,
+			fillOpacity: 0.3,
 			map: map,
 			center: location,
 			position: location,
-			radius: raio*1000
+			radius: raio*1000,
+      zIndex: i
 		});
-    raio-=mult;
-    if (raio<=0.01) raio=0.1;
-    valores_limiares += calcularCfeModeloMarcado(raio) + " ";
 		marker.addListener('click', function(event){
 			if (document.querySelector('input[name=optPlace]:checked').value=='mobile'){
 				placeEstacaoMovel(map, event.latLng);
@@ -49,10 +129,26 @@ function placeMarker(map, location) {
 				placeMarker(map, event.latLng);
 			}
 		});
+    marker.pathloss = calcularCfeModeloMarcado(raio);
 		arrAntenas.push(marker);
+    locationx = getLatLangBordaCirculo(location, raio)
 
+    new TxtOverlay(locationx, "<div>"+marker.pathloss.toFixed(2)+"dB</div>", "customBox", map)
+    raio-=mult;
   }
-  alert(valores_limiares);
+}
+
+function getLatLangBordaCirculo(location, raio) {
+  lat = location.lat()
+  lon = location.lng()
+  R=6371000
+  dn = raio*700
+  de = raio*700
+  dLat = dn/R
+  dLon = de/(R*Math.cos(Math.PI*lat/180))
+  latO = lat + dLat * 180/Math.PI
+  lonO = lon + dLon * 180/Math.PI
+  return new google.maps.LatLng(latO, lonO)
 }
 
 function placeEstacaoMovel(map, location) {
