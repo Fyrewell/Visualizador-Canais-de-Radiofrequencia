@@ -17,7 +17,8 @@ var arrAntenas = []
 var arrEstacoesMoveis = []
 
 function iniciarMapa() {
-
+  arrAntenas = []
+  arrEstacoesMoveis = []
   var getmap = document.getElementById("map");
   var setcenter = new google.maps.LatLng(-29.697833,-52.437242);
   var mapOptions = {center: setcenter, zoom: 14};
@@ -29,7 +30,6 @@ function iniciarMapa() {
     } else {
       placeMarker(map, event.latLng);
     }
-    calcularCfeModeloMarcado();
     
     var frequencia = document.querySelector('#frequencia').value
     var alturaBS = document.querySelector('#alturaBS').value
@@ -109,13 +109,12 @@ function placeMarker(map, location) {
 	'#CD853F','#D2691E','#F4A460','#FFDEAD', // Amarelo
 	'#ADFF2F','#7CFC00','#32CD32','#006400'];//Verde 
 	var raio = document.querySelector('#raio').value;
-  console.log(raio)
   var mult = raio/11;
 	for (i = 0; i < 11; i++) {
 		var marker = new google.maps.Circle({
 			strokeOpacity: 0,
 			fillColor:colors[i],
-			fillOpacity: 0.3,
+			fillOpacity: 0.2,
 			map: map,
 			center: location,
 			position: location,
@@ -130,20 +129,21 @@ function placeMarker(map, location) {
 			}
 		});
     marker.pathloss = calcularCfeModeloMarcado(raio);
-		arrAntenas.push(marker);
-    locationx = getLatLangBordaCirculo(location, raio)
-
+    locationx = getLatLngBordaCirculo(location, raio)
+    marker.LatLngBorda = locationx
+    arrAntenas.push(marker);
+    
     new TxtOverlay(locationx, "<div>"+marker.pathloss.toFixed(2)+"dB</div>", "customBox", map)
     raio-=mult;
   }
 }
 
-function getLatLangBordaCirculo(location, raio) {
+function getLatLngBordaCirculo(location, raio) {
   lat = location.lat()
   lon = location.lng()
   R=6371000
-  dn = raio*700
-  de = raio*700
+  dn = raio*710
+  de = raio*710
   dLat = dn/R
   dLon = de/(R*Math.cos(Math.PI*lat/180))
   latO = lat + dLat * 180/Math.PI
@@ -161,10 +161,10 @@ function placeEstacaoMovel(map, location) {
   arrEstacoesMoveis.push(marker);
 
   // Procurar onde se conectar
+  /* POR DISTANCIA
   var menor = Infinity;
   var antenaPerto = {}
   arrAntenas.forEach(function(el, ind, arr){
-    console.log(marker.position.lat(), marker.position.lng(), el.position.lat(), el.position.lng())
     var menor_t = haversineDistance(marker.position.lat(), marker.position.lng(), el.position.lat(), el.position.lng())
     if (menor_t < menor){
       menor = menor_t
@@ -182,7 +182,33 @@ function placeEstacaoMovel(map, location) {
     strokeWeight: 8,
     map: map
   });
-
+*/
+  // POR QUALIDADE DE SINAL
+  var menor = Infinity;
+  var antenaSinal = {}
+  arrAntenas.forEach(function(el, ind, arr){
+    var distEstacaoCentroAntena = haversineDistance(marker.position.lat(), marker.position.lng(), el.position.lat(), el.position.lng())
+    var distBordaCentroAntena = haversineDistance(el.LatLngBorda.lat(), el.LatLngBorda.lng(), el.position.lat(), el.position.lng())
+    if ( distEstacaoCentroAntena < distBordaCentroAntena) { // está contido
+      var menor_t = el.pathloss
+      if (menor_t < menor){
+        menor = menor_t
+        antenaSinal = el
+      }
+    }
+  });
+  if (antenaSinal!={}) {
+    var line = new google.maps.Polyline({
+      path: [
+          new google.maps.LatLng(marker.position.lat(), marker.position.lng()), 
+          new google.maps.LatLng(antenaSinal.position.lat(), antenaSinal.position.lng())
+      ],
+      strokeColor: "#000",
+      strokeOpacity: 1.0,
+      strokeWeight: 8,
+      map: map
+    });
+  }
 }
 
 function haversineDistance(latitudeFrom, longitudeFrom, latitudeTo, longitudeTo, earthRadius = 6371000) {
@@ -222,8 +248,6 @@ function calcularCfeModeloMarcado (raio) {
       PLval = SUI(frequencia, alturaBS, alturaMS, zonaInt(zona), raio)
     break
   }
-
-  document.querySelector('#divForBindPathLoss').innerHTML = PLval.toFixed(8)
   
   return PLval;
 }
@@ -245,24 +269,22 @@ function zonaInt(zonaStr) {
 
 /* range of parameters
   frequency : 150–1500 MHz
-  hb : 1–10 m
-  hm : 30–200 m
+  hb : 30–200 m
+  hm : 1–10 m
   radius : lkm-10 km
   http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.303.4057&rep=rep1&type=pdf
 */
 function okumuraHata(frequency, hb, hm, place, radius){
   // fator para cidades pequenas e medias, para grandes varia formula conforme frequencia...
   var a = function(hm, fc) {
-    return ((1.1*Math.log10(fc-0.7))*hm-(1.56*Math.log10(fc)-0.8))
+    return (0.8 + (1.1*Math.log10(fc)-0.7)*hm - (1.56*Math.log10(fc)))
   }
 
   var PL = 69.55+26.16*(Math.log10(frequency))-13.82*Math.log10(hb)-a(hm,frequency)+(44.9 - 6.55 * Math.log10(hb))*Math.log10(radius)
-  if (place==1) {
-    PL = 69.55+26.16*(Math.log10(frequency))-13.82*Math.log10(hb)-a(hm,frequency)+(44.9 - 6.55 * Math.log10(hb))*Math.log10(radius)
-  }else if (place==2) {
+  if (place==2) {
     PL = PL-2*Math.pow(Math.log10(frequency/28),2)-5.4
   }else if (place==3) {
-    PL = PL-4.78*Math.pow(Math.log10(frequency),2)-18.33*Math.log10(frequency)-40.98
+    PL = PL-4.78*Math.pow(Math.log10(frequency),2)+18.33*Math.log10(frequency)-40.98
   }
 
   return PL;
@@ -270,8 +292,8 @@ function okumuraHata(frequency, hb, hm, place, radius){
 
 /* range of parameters
   frequency : 1500–2000 MHz
-  hb : lm to lOm
-  hm : 3Om to 200m
+  hb : 3Om to 200m
+  hm : lm to lOm
   radius : lkm to 20 km
   http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.303.4057&rep=rep1&type=pdf
 */
@@ -295,7 +317,7 @@ function cost231Hata(frequency, hb, hm, place, radius){
   hb : l0m to 80m
   radius : lkm to 10 km
 */
-function SUI(frequency, hb, hm, place, radius){
+function SUI_old_MathLab(frequency, hb, hm, place, radius){
   var d0 = 100
   var Xrho = 6
   var Y = function(i,hb) {
@@ -307,4 +329,40 @@ function SUI(frequency, hb, hm, place, radius){
   var PL = 20*Math.log10(4*Math.PI*d0*frequency/300) + 10*Y(place,hb)*Math.log10(radius/d0) + Xrho;
 
   return PL;
+}
+
+/*
+https://www.cl.cam.ac.uk/research/dtg/www/files/publications/public/vsa23/VTC05_Empirical.pdf
+*/
+function SUI(frequency, hb, hm, place, radius){
+  var d0 = 100
+  //var Xrho = 6
+  var Y = function(i,hb) {
+    var a = [0, 4.6, 4, 3.6]
+    var b = [0, 0.0075, 0.0065, 0.005]
+    var c = [0, 12.6, 17.1, 20]
+    return a[i]-(b[i]*hb)+(c[i]/hb)
+  }
+  
+  function Xf(frequency) {
+    return 6*Math.log10(frequency/2000)
+  }
+  
+  function Xh(i,hm) {
+    var opt = [0, -10.8*Math.log10(hm/2000), -10.8*Math.log10(hm/2000), -20*Math.log10(hm/2000)]
+    return opt[i]
+  }
+  
+  function s() {
+    return Math.floor(Math.random() * (10.6 - 8.2)) + 8.2;
+  }
+  
+  var PL = 20*Math.log10(4*Math.PI*d0*frequency/300) + 10*Y(place,hb)*Math.log10(radius/d0) + Xf(frequency) + Xh(place,hm) + s();
+
+  return PL;
+}
+
+
+function reiniciarMap() {
+  iniciarMapa();
 }
